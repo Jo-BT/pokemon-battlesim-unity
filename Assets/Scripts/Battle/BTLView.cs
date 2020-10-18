@@ -7,8 +7,8 @@ public class BTLView : MonoBehaviour
     public Battle battleModel;
 
     [Header("Components")]
-    public BTLScene battleScene;
-    public BTLUI battleUI;
+    public BTLSCN battleScene;
+    public BTLUI_New battleUI;
     public BattleAssetLoader assetLoader;
 
     [Header("Player View")]

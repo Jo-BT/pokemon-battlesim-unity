@@ -8,5 +8,4 @@ public class BTLSCN_Pokemon : MonoBehaviour
 
     public string pokemonUniqueID;
     public string pokemonID;
-    public bool dynamax = false;
 }

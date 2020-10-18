@@ -69,28 +69,33 @@ public class BattleAssetLoader : MonoBehaviour
         bool useicon = false,
         bool useFront = false,
         bool useBack = false,
-
         BTLSCN_Pokemon scnPokemon = null,
+        BTLSCN_PokemonBW scnPokemonBW = null,
         Image imagePokemon = null)
     {
+        PokemonData pokemonData = (pokemon.bProps.illusion != null) ?
+            PokemonDatabase.instance.GetPokemonIllusionData(pokemon.bProps.illusion) : pokemon.data;
         yield return StartCoroutine(LoadPokemon(
-            data: pokemon.data,
+            data: pokemonData,
             useicon: useicon, useFront: useFront, useBack: useBack,
-            scnPokemon: scnPokemon, imagePokemon: imagePokemon
+            scnPokemon: scnPokemon, scnPokemonBW: scnPokemonBW,
+            imagePokemon: imagePokemon
             ));
     }
     public IEnumerator LoadPokemon(PokemonData data, 
         bool useicon = false,
         bool useFront = false,
         bool useBack = false,
-        
         BTLSCN_Pokemon scnPokemon = null,
+        BTLSCN_PokemonBW scnPokemonBW = null,
         Image imagePokemon = null)
     {
+        // sprite loading
         string iconSprite = "pokemonSprites/icon/" + data.displayID;
         string frontSprite = "pokemonSprites/front/" + data.displayID;
         string backSprite = "pokemonSprites/back/" + data.displayID;
 
+        // icon
         if (!loadedPokemonSprites.ContainsKey(iconSprite))
         {
             loadedPokemonSprites[iconSprite] = null;
@@ -101,29 +106,26 @@ public class BattleAssetLoader : MonoBehaviour
                 loadedPokemonSprites[iconSprite] = op.Result;
                 if (useicon)
                 {
-                    if (scnPokemon != null)
-                    {
-                        scnPokemon.spriteRenderer.sprite = loadedPokemonSprites[iconSprite];
-                    }
-                    if (imagePokemon != null)
-                    {
-                        imagePokemon.sprite = loadedPokemonSprites[iconSprite];
-                    }
+                    SetPokemonSprite(
+                        spritePath: iconSprite,
+                        scnPokemon: scnPokemon,
+                        scnPokemonBW: scnPokemonBW,
+                        imagePokemon: imagePokemon
+                        );
                 }
             }
         }
         else if (useicon)
         {
-            if (scnPokemon != null)
-            {
-                scnPokemon.spriteRenderer.sprite = loadedPokemonSprites[iconSprite];
-            }
-            if (imagePokemon != null)
-            {
-                imagePokemon.sprite = loadedPokemonSprites[iconSprite];
-            }
+            SetPokemonSprite(
+                spritePath: iconSprite,
+                scnPokemon: scnPokemon, 
+                scnPokemonBW: scnPokemonBW, 
+                imagePokemon: imagePokemon
+                );
         }
 
+        // front
         if (!loadedPokemonSprites.ContainsKey(frontSprite))
         {
             loadedPokemonSprites[frontSprite] = null;
@@ -134,29 +136,26 @@ public class BattleAssetLoader : MonoBehaviour
                 loadedPokemonSprites[frontSprite] = op.Result;
                 if (useFront)
                 {
-                    if (scnPokemon != null)
-                    {
-                        scnPokemon.spriteRenderer.sprite = loadedPokemonSprites[frontSprite];
-                    }
-                    if (imagePokemon != null)
-                    {
-                        imagePokemon.sprite = loadedPokemonSprites[frontSprite];
-                    }
+                    SetPokemonSprite(
+                        spritePath: frontSprite,
+                        scnPokemon: scnPokemon,
+                        scnPokemonBW: scnPokemonBW,
+                        imagePokemon: imagePokemon
+                        );
                 }
             }
         }
         else if (useFront)
         {
-            if (scnPokemon != null)
-            {
-                scnPokemon.spriteRenderer.sprite = loadedPokemonSprites[frontSprite];
-            }
-            if (imagePokemon != null)
-            {
-                imagePokemon.sprite = loadedPokemonSprites[frontSprite];
-            }
+            SetPokemonSprite(
+                spritePath: frontSprite,
+                scnPokemon: scnPokemon,
+                scnPokemonBW: scnPokemonBW,
+                imagePokemon: imagePokemon
+                );
         }
 
+        // back
         if (!loadedPokemonSprites.ContainsKey(backSprite))
         {
             loadedPokemonSprites[backSprite] = null;
@@ -167,30 +166,46 @@ public class BattleAssetLoader : MonoBehaviour
                 loadedPokemonSprites[backSprite] = op.Result;
                 if (useBack)
                 {
-                    if (scnPokemon != null)
-                    {
-                        scnPokemon.spriteRenderer.sprite = loadedPokemonSprites[backSprite];
-                    }
-                    if (imagePokemon != null)
-                    {
-                        imagePokemon.sprite = loadedPokemonSprites[backSprite];
-                    }
+                    SetPokemonSprite(
+                        spritePath: backSprite,
+                        scnPokemon: scnPokemon,
+                        scnPokemonBW: scnPokemonBW,
+                        imagePokemon: imagePokemon
+                        );
                 }
             }
         }
         else if (useBack)
         {
-            if (scnPokemon != null)
-            {
-                scnPokemon.spriteRenderer.sprite = loadedPokemonSprites[backSprite];
-            }
-            if (imagePokemon != null)
-            {
-                imagePokemon.sprite = loadedPokemonSprites[backSprite];
-            }
+            SetPokemonSprite(
+                spritePath: backSprite,
+                scnPokemon: scnPokemon,
+                scnPokemonBW: scnPokemonBW,
+                imagePokemon: imagePokemon
+                );
         }
     }
-    
+    public void SetPokemonSprite(
+        string spritePath,
+        BTLSCN_Pokemon scnPokemon = null,
+        BTLSCN_PokemonBW scnPokemonBW = null,
+        Image imagePokemon = null)
+    {
+        if (scnPokemon != null)
+        {
+            scnPokemon.spriteRenderer.sprite = loadedPokemonSprites[spritePath];
+        }
+        if (scnPokemonBW != null)
+        {
+            scnPokemonBW.spriteRenderer.sprite = loadedPokemonSprites[spritePath];
+            scnPokemonBW.shadowRenderer.sprite = loadedPokemonSprites[spritePath];
+        }
+        if (imagePokemon != null)
+        {
+            imagePokemon.sprite = loadedPokemonSprites[spritePath];
+        }
+    }
+
     // ---TRAINERS---
     
     public IEnumerator LoadTrainer(Trainer trainer)

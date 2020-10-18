@@ -67,10 +67,10 @@ public class Trainer
             partyPokemon.Add(Pokemon.Clone(party[i]));
         }
 
-        List<Item> items = new List<Item>();
+        List<Item> trainerItems = new List<Item>();
         for (int i = 0; i < items.Count; i++)
         {
-            items.Add(items[i].Clone());
+            trainerItems.Add(items[i].Clone());
         }
 
         Trainer cloneTrainer = new Trainer(
@@ -78,7 +78,7 @@ public class Trainer
             playerID: playerID,
             isWildPokemon: isWildPokemon,
             party: partyPokemon,
-            items: items,
+            items: trainerItems,
 
             megaRing: megaRing,
             ZRing: ZRing,

@@ -6,5 +6,8 @@ using UnityEngine.UI;
 public class BTLUI_ButtonFight : BTLUI_Button
 {
     public Text moveTxt;
-    public Pokemon.Moveslot moveslot = null;
+    public Text ppTxt;
+    public Text typeTxt;
+    [HideInInspector] public Pokemon.Moveslot moveslot = null;
+    public MoveData moveData = null;
 }

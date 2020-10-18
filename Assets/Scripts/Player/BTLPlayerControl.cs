@@ -17,7 +17,7 @@ public class BTLPlayerControl : MonoBehaviour
         Command,
         CommandExtra,
         Fight,
-        FightTarget,
+        FieldTarget,
         Party,
         PartyCommand,
         BagPocket,
@@ -26,6 +26,8 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private Controls _controls;
     private ControlContext context;
+    private bool lockControls = false;
+
     private Coroutine
         waitCR,
         controlCommandCR,
@@ -103,6 +105,7 @@ public class BTLPlayerControl : MonoBehaviour
     private void Awake()
     {
         _controls = new Controls();
+        //Legacy_SwitchControlContext(ControlContext.None);
         SwitchControlContext(ControlContext.None);
         SetControls();
         SetDebugControls();
@@ -120,10 +123,20 @@ public class BTLPlayerControl : MonoBehaviour
     // General Controls
     public void SetControls()
     {
-        _controls.Battle.Select.performed += (obj) =>
+        _controls.BattleDialog.Select.performed += (obj) =>
         {
             view.battleUI.dialog.advancedDialogPressed = true;
         };
+    }
+    public bool AreControlsLocked()
+    {
+        return lockControls || waitCRActive;
+    }
+    public IEnumerator DelayControls(float waitTime = 0.02f)
+    {
+        lockControls = true;
+        yield return new WaitForSeconds(waitTime);
+        lockControls = false;
     }
 
     // Model
@@ -609,7 +622,7 @@ public class BTLPlayerControl : MonoBehaviour
 
     // Controller
 
-    public void SwitchControlContext(ControlContext newContext)
+    public void Legacy_SwitchControlContext(ControlContext newContext)
     {
         // switch from previous context, unsetting relevant listeners
         switch (context)
@@ -627,10 +640,10 @@ public class BTLPlayerControl : MonoBehaviour
                 _controls.Battle.Move.performed -= NavigateFightMenuQuad;
                 break;
 
-            case ControlContext.FightTarget:
-                _controls.Battle.Cancel.performed -= CancelFightTargetMenu;
-                _controls.Battle.Select.performed -= SelectFightTargetMenu;
-                _controls.Battle.Move.performed -= NavigateFightTargetMenu;
+            case ControlContext.FieldTarget:
+                _controls.Battle.Cancel.performed -= CancelFieldTargetMenu;
+                _controls.Battle.Select.performed -= SelectFieldTargetMenu;
+                _controls.Battle.Move.performed -= NavigateFieldTargetMenu;
                 break;
 
             case ControlContext.Party:
@@ -681,10 +694,10 @@ public class BTLPlayerControl : MonoBehaviour
                 _controls.Battle.Move.performed += NavigateFightMenuQuad;
                 break;
 
-            case ControlContext.FightTarget:
-                _controls.Battle.Cancel.performed += CancelFightTargetMenu;
-                _controls.Battle.Select.performed += SelectFightTargetMenu;
-                _controls.Battle.Move.performed += NavigateFightTargetMenu;
+            case ControlContext.FieldTarget:
+                _controls.Battle.Cancel.performed += CancelFieldTargetMenu;
+                _controls.Battle.Select.performed += SelectFieldTargetMenu;
+                _controls.Battle.Move.performed += NavigateFieldTargetMenu;
                 break;
 
             case ControlContext.Party:
@@ -712,6 +725,115 @@ public class BTLPlayerControl : MonoBehaviour
                 break;
 
             case ControlContext.BagTarget:
+                break;
+
+            default:
+                break;
+        }
+    }
+    public void SwitchControlContext(ControlContext newContext, bool delayControls = true)
+    {
+        // Delay new control input
+        if (delayControls)
+        {
+            StartCoroutine(DelayControls());
+        }
+
+        // unset previous listeners
+        switch (context)
+        {
+            case ControlContext.Command:
+                _controls.BattleMenuCommand.Cancel.performed -= CancelCommandMenu;
+                _controls.BattleMenuCommand.Select.performed -= SelectCommandMenu;
+                _controls.BattleMenuCommand.Move.performed -= NavigateCommandMenuHorizontal;
+                break;
+
+            case ControlContext.Fight:
+                _controls.BattleMenuFight.Cancel.performed -= CancelFightMenu;
+                _controls.BattleMenuFight.Select.performed -= SelectFightMenu;
+                _controls.BattleMenuFight.Special.performed -= SelectFightSpecial;
+                _controls.BattleMenuFight.Move.performed -= NavigateFightMenuQuad;
+                break;
+
+            case ControlContext.FieldTarget:
+                _controls.BattleMenuFieldTarget.Cancel.performed -= CancelFieldTargetMenu;
+                _controls.BattleMenuFieldTarget.Select.performed -= SelectFieldTargetMenu;
+                _controls.BattleMenuFieldTarget.Move.performed -= NavigateFieldTargetMenu;
+                break;
+
+            case ControlContext.Party:
+                _controls.BattleMenuParty.Cancel.performed -= CancelPartyMenu;
+                _controls.BattleMenuParty.Select.performed -= SelectPartyMenu;
+                _controls.BattleMenuParty.Move.performed -= NavigatePartyMenuQuad;
+                break;
+
+            case ControlContext.PartyCommand:
+                _controls.BattleMenuPartyCommand.Cancel.performed -= CancelPartyCommandMenu;
+                _controls.BattleMenuPartyCommand.Select.performed -= SelectPartyCommandMenu;
+                _controls.BattleMenuPartyCommand.Move.performed -= NavigatePartyCommandMenu;
+                break;
+
+            case ControlContext.BagPocket:
+                _controls.BattleMenuBag.Cancel.performed -= CancelBagPocketMenu;
+                _controls.BattleMenuBag.Select.performed -= SelectBagPocketMenu;
+                _controls.BattleMenuBag.Move.performed -= NavigateBagPocketMenuQuad;
+                break;
+
+            case ControlContext.Bag:
+                _controls.BattleMenuBagItem.Cancel.performed -= CancelBagMenu;
+                _controls.BattleMenuBagItem.Select.performed -= SelectBagMenu;
+                _controls.BattleMenuBagItem.Move.performed -= NavigateBagMenuQuad;
+                break;
+
+            default:
+                break;
+        }
+
+        // switch to new context, setting relevant listeners
+        context = newContext;
+        switch (context)
+        {
+            case ControlContext.Command:
+                _controls.BattleMenuCommand.Cancel.performed += CancelCommandMenu;
+                _controls.BattleMenuCommand.Select.performed += SelectCommandMenu;
+                _controls.BattleMenuCommand.Move.performed += NavigateCommandMenuHorizontal;
+                break;
+
+            case ControlContext.Fight:
+                _controls.BattleMenuFight.Cancel.performed += CancelFightMenu;
+                _controls.BattleMenuFight.Select.performed += SelectFightMenu;
+                _controls.BattleMenuFight.Special.performed += SelectFightSpecial;
+                _controls.BattleMenuFight.Move.performed += NavigateFightMenuQuad;
+                break;
+
+            case ControlContext.FieldTarget:
+                _controls.BattleMenuFieldTarget.Cancel.performed += CancelFieldTargetMenu;
+                _controls.BattleMenuFieldTarget.Select.performed += SelectFieldTargetMenu;
+                _controls.BattleMenuFieldTarget.Move.performed += NavigateFieldTargetMenu;
+                break;
+
+            case ControlContext.Party:
+                _controls.BattleMenuParty.Cancel.performed += CancelPartyMenu;
+                _controls.BattleMenuParty.Select.performed += SelectPartyMenu;
+                _controls.BattleMenuParty.Move.performed += NavigatePartyMenuQuad;
+                break;
+
+            case ControlContext.PartyCommand:
+                _controls.BattleMenuPartyCommand.Cancel.performed += CancelPartyCommandMenu;
+                _controls.BattleMenuPartyCommand.Select.performed += SelectPartyCommandMenu;
+                _controls.BattleMenuPartyCommand.Move.performed += NavigatePartyCommandMenu;
+                break;
+
+            case ControlContext.BagPocket:
+                _controls.BattleMenuBag.Cancel.performed += CancelBagPocketMenu;
+                _controls.BattleMenuBag.Select.performed += SelectBagPocketMenu;
+                _controls.BattleMenuBag.Move.performed += NavigateBagPocketMenuQuad;
+                break;
+
+            case ControlContext.Bag:
+                _controls.BattleMenuBagItem.Cancel.performed += CancelBagMenu;
+                _controls.BattleMenuBagItem.Select.performed += SelectBagMenu;
+                _controls.BattleMenuBagItem.Move.performed += NavigateBagMenuQuad;
                 break;
 
             default:
@@ -793,9 +915,9 @@ public class BTLPlayerControl : MonoBehaviour
             {
                 committedCommands[i] = playerCommand;
             }
-            view.battleUI.UnsetAllPanels();
+            view.battleUI.UnsetPanels();
         }
-        view.battleUI.SwitchPanel(BTLUI.Panel.None);
+        view.battleUI.SwitchPanel(BTLUI_Base.Panel.None);
         callback(committedCommands);
     }
 
@@ -831,6 +953,7 @@ public class BTLPlayerControl : MonoBehaviour
                     committedCommands,
                     forceSwitch));
             yield return controlCommandCR;
+            //Legacy_SwitchControlContext(ControlContext.None);
             SwitchControlContext(ControlContext.None);
 
             // go back a pokemon if we clicked back
@@ -845,7 +968,7 @@ public class BTLPlayerControl : MonoBehaviour
                 committedCommands[i] = this.playerCommand;
             }
         }
-        view.battleUI.SwitchPanel(BTLUI.Panel.None);
+        view.battleUI.SwitchPanel(BTLUI_Base.Panel.None);
         callback(committedCommands);
     }
 
@@ -880,9 +1003,10 @@ public class BTLPlayerControl : MonoBehaviour
 
         // set the controls and ui elements
         choosingCommand = true;
+        //Legacy_SwitchControlContext(ControlContext.Command);
         SwitchControlContext(ControlContext.Command);
 
-        view.battleUI.SwitchPanel(BTLUI.Panel.Command);
+        view.battleUI.SwitchPanel(BTLUI_Base.Panel.Command);
         view.battleUI.SetCommands(pokemon, commandTypes);
         view.battleUI.SwitchSelectedCommandTo(commandTypes[commandIndex]);
 
@@ -891,6 +1015,7 @@ public class BTLPlayerControl : MonoBehaviour
             yield return null;
         }
 
+        //Legacy_SwitchControlContext(ControlContext.None);
         SwitchControlContext(ControlContext.None);
     }
 
@@ -916,12 +1041,12 @@ public class BTLPlayerControl : MonoBehaviour
 
         // set the controls and ui elements
         choosingExtraCommand = true;
+        //Legacy_SwitchControlContext(ControlContext.PartyCommand);
         SwitchControlContext(ControlContext.PartyCommand);
 
-        view.battleUI.SwitchPanel(BTLUI.Panel.PartyCommand);
+        view.battleUI.SwitchPanel(BTLUI_Base.Panel.PartyCommand);
         view.battleUI.SetPartyCommands(partySlots[partyIndex], extraCommands);
         view.battleUI.SwitchSelectedPartyCommandTo(extraCommands[extraCommandIndex]);
-        //view.battleUI.SwitchSelectedExtraCommandTo(extraCommands[extraCommandIndex], extraCommands);
 
         while (choosingExtraCommand)
         {
@@ -1018,14 +1143,16 @@ public class BTLPlayerControl : MonoBehaviour
         }
 
         choosingFight = true;
+        //Legacy_SwitchControlContext(ControlContext.Fight);
         SwitchControlContext(ControlContext.Fight);
 
         view.battleUI.SetMoves(
-            choices: moveslots, 
+            pokemon: commandPokemon,
+            moveslots: moveslots, 
             canMegaEvolve: canMegaEvolve, 
             canZMove: canZMove,
             canDynamax: canDynamax);
-        view.battleUI.SwitchPanel(BTLUI.Panel.Fight);
+        view.battleUI.SwitchPanel(BTLUI_Base.Panel.Fight);
         view.battleUI.SwitchSelectedMoveTo(
             pokemon: commandPokemon, 
             selected: moveslots[moveIndex], 
@@ -1039,7 +1166,7 @@ public class BTLPlayerControl : MonoBehaviour
         }
     }
 
-    public IEnumerator ControlPromptFightTarget(
+    public IEnumerator ControlPromptFieldTarget(
         Pokemon pokemon,
         Trainer trainer,
         Pokemon.Moveslot selectedMoveslot,
@@ -1081,10 +1208,11 @@ public class BTLPlayerControl : MonoBehaviour
         }
 
         choosingFightTarget = true;
-        SwitchControlContext(ControlContext.FightTarget);
+        //Legacy_SwitchControlContext(ControlContext.FieldTarget);
+        SwitchControlContext(ControlContext.FieldTarget);
 
+        view.battleUI.SwitchPanel(BTLUI_Base.Panel.FieldTargeting);
         view.battleUI.SetFieldTargets(view.teamPos);
-        view.battleUI.SwitchPanel(BTLUI.Panel.FieldTargeting);
         view.battleUI.SwitchSelectedMoveTargetsTo(battleModel.GetPokemonPosition(pokemon), moveTargetIndex, moveTargets);
 
         while (choosingFightTarget)
@@ -1125,11 +1253,12 @@ public class BTLPlayerControl : MonoBehaviour
         }
 
         choosingParty = true;
+        //Legacy_SwitchControlContext(ControlContext.Party);
         SwitchControlContext(ControlContext.Party);
 
-        view.battleUI.SwitchPanel(BTLUI.Panel.Party);
+        view.battleUI.SwitchPanel(BTLUI_Base.Panel.Party);
         view.battleUI.SetParty(partySlots, forceSwitch, selectedItem);
-        view.battleUI.SwitchSelectedPartyTo(partySlots[partyIndex]);
+        view.battleUI.SwitchSelectedPartyMemberTo(partySlots[partyIndex]);
 
         while (choosingParty)
         {
@@ -1162,9 +1291,10 @@ public class BTLPlayerControl : MonoBehaviour
         }
 
         choosingBagPocket = true;
+        //Legacy_SwitchControlContext(ControlContext.BagPocket);
         SwitchControlContext(ControlContext.BagPocket);
 
-        view.battleUI.SwitchPanel(BTLUI.Panel.BagPocket);
+        view.battleUI.SwitchPanel(BTLUI_Base.Panel.Bag);
         view.battleUI.SetBagPockets(itemPockets);
         view.battleUI.SwitchSelectedBagPocketTo(itemPockets[itemPocketIndex]);
 
@@ -1187,6 +1317,7 @@ public class BTLPlayerControl : MonoBehaviour
 
         // set the possible items that the trainer can use
         itemSlots = trainer.GetItemsByBattlePocket(pocket);
+        Debug.Log("Items in pocket " + pocket.ToString() + ": " + itemSlots.Count);
 
         // set the initial item index
         if (itemOffset + itemIndex >= itemSlots.Count)
@@ -1201,9 +1332,10 @@ public class BTLPlayerControl : MonoBehaviour
         }
 
         choosingItem = true;
+        //Legacy_SwitchControlContext(ControlContext.Bag);
         SwitchControlContext(ControlContext.Bag);
 
-        view.battleUI.SwitchPanel(BTLUI.Panel.Bag);
+        view.battleUI.SwitchPanel(BTLUI_Base.Panel.BagItem);
         view.battleUI.SetItems(trainer, pocket, itemSlots, itemOffset);
         view.battleUI.SwitchSelectedItemTo(itemSlots[itemOffset + itemIndex]);
 
@@ -1213,12 +1345,61 @@ public class BTLPlayerControl : MonoBehaviour
         }
     }
 
+    // GENERAL MENU
+    private object GetMenuSelectMap(int rows, int columns, bool accountForBack, List<object> list)
+    {
+        object[,] map = new object[rows, columns];
+        int start = accountForBack ? 1 : 0;
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < columns; j++)
+            {
+                if (i == 0 && accountForBack)
+                {
+                    map[i, j] = null;
+                }
+                else
+                {
+                    if (start >= list.Count)
+                    {
+                        map[i, j] = null;
+                    }
+                    else
+                    {
+                        map[i, j] = list[start];
+                    }
+                    start++;
+                }
+            }
+        }
+        return map;
+    }
+    private int[] GetMenuSelectXYPos(object selected, object[,] map)
+    {
+        for (int i = 0; i < map.GetLength(0); i++)
+        {
+            for (int j = 0; j < map.GetLength(1); j++)
+            {
+                if (map[i, j] == selected)
+                {
+                    return new int[] { i, j };
+                }
+            }
+        }
+
+        return new int[] { -1, -1 };
+    }
 
 
     // COMMAND MENU
     private void NavigateCommandMenuVertical(InputAction.CallbackContext obj)
     {
         int addIndex = Mathf.RoundToInt(obj.ReadValue<Vector2>().y);
+        NavigateCommandMenu(addIndex);
+    }
+    private void NavigateCommandMenuHorizontal(InputAction.CallbackContext obj)
+    {
+        int addIndex = Mathf.RoundToInt(obj.ReadValue<Vector2>().x);
         NavigateCommandMenu(addIndex);
     }
     private void NavigateCommandMenuQuad(InputAction.CallbackContext obj)
@@ -1290,7 +1471,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void NavigateCommandMenu(int scrollAmount)
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1312,7 +1493,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void SelectCommandMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1373,7 +1554,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void CancelCommandMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1403,7 +1584,7 @@ public class BTLPlayerControl : MonoBehaviour
             bool accountForBack = moveslots.Contains(null);
             int rows = ((moveslots.Count + (accountForBack ? -1 : 0)) / 2) + (accountForBack ? 1 : 0);
             int columns = 2;
-            Pokemon.Moveslot[,] map = GetMoveslotMap(rows, columns, accountForBack);
+            Pokemon.Moveslot[,] map = GetMoveslotMap(rows, columns, accountForBack, moveslots);
 
             int newPos = moveIndex;
             int[] curPos = GetMoveslotXYPos(moveslots[moveIndex], map);
@@ -1421,7 +1602,7 @@ public class BTLPlayerControl : MonoBehaviour
             NavigateFightMenu(newPos - moveIndex);
         }
     }
-    private Pokemon.Moveslot[,] GetMoveslotMap(int rows, int columns, bool accountForBack)
+    private Pokemon.Moveslot[,] GetMoveslotMap(int rows, int columns, bool accountForBack, List<Pokemon.Moveslot> list)
     {
         Pokemon.Moveslot[,] map = new Pokemon.Moveslot[rows, columns];
         int start = accountForBack ? 1 : 0;
@@ -1435,13 +1616,13 @@ public class BTLPlayerControl : MonoBehaviour
                 }
                 else
                 {
-                    if (start >= moveslots.Count)
+                    if (start >= list.Count)
                     {
                         map[i, j] = null;
                     }
                     else
                     {
-                        map[i, j] = moveslots[start];
+                        map[i, j] = list[start];
                     }
                     start++;
                 }
@@ -1466,7 +1647,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void NavigateFightMenu(int scrollAmount)
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1493,6 +1674,10 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void SelectFightSpecial()
     {
+        if (AreControlsLocked())
+        {
+            return;
+        }
         if (canMegaEvolve)
         {
             chooseMegaEvolve = !chooseMegaEvolve;
@@ -1519,7 +1704,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void SelectFightMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1585,7 +1770,7 @@ public class BTLPlayerControl : MonoBehaviour
                 // we have to specifically choose the target
                 else
                 {
-                    controlFightTargetCR = StartCoroutine(ControlPromptFightTarget(
+                    controlFightTargetCR = StartCoroutine(ControlPromptFieldTarget(
                         commandPokemon,
                         commandTrainer,
                         choice,
@@ -1600,7 +1785,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void CancelFightMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1610,8 +1795,9 @@ public class BTLPlayerControl : MonoBehaviour
             playerCommand = null;
             choosingFight = false;
 
+            //Legacy_SwitchControlContext(ControlContext.Command);
             SwitchControlContext(ControlContext.Command);
-            view.battleUI.SwitchPanel(BTLUI.Panel.Command, true);
+            view.battleUI.SwitchPanel(BTLUI_Base.Panel.Command);
             view.battleUI.SwitchSelectedCommandTo(commandTypes[commandIndex]);
         }
     }
@@ -1619,14 +1805,14 @@ public class BTLPlayerControl : MonoBehaviour
 
 
     // FIELD TARGETING MENU
-    private void NavigateFightTargetMenu(InputAction.CallbackContext obj)
+    private void NavigateFieldTargetMenu(InputAction.CallbackContext obj)
     {
         int addIndex = Mathf.RoundToInt(obj.ReadValue<Vector2>().x);
         NavigateFightTargetMenu(addIndex);
     }
     private void NavigateFightTargetMenu(int scrollAmount)
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1641,13 +1827,13 @@ public class BTLPlayerControl : MonoBehaviour
             view.battleUI.SwitchSelectedMoveTargetsTo(battleModel.GetPokemonPosition(commandPokemon), moveTargetIndex, moveTargets);
         }
     }
-    private void SelectFightTargetMenu(InputAction.CallbackContext obj)
+    private void SelectFieldTargetMenu(InputAction.CallbackContext obj)
     {
         SelectFightTargetMenu();
     }
     private void SelectFightTargetMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1656,7 +1842,7 @@ public class BTLPlayerControl : MonoBehaviour
         // exit to fight
         if (choice == null)
         {
-            CancelFightTargetMenu();
+            CancelFieldTargetMenu();
         }
         // create command
         else
@@ -1701,13 +1887,13 @@ public class BTLPlayerControl : MonoBehaviour
             }
         }
     }
-    private void CancelFightTargetMenu(InputAction.CallbackContext obj)
+    private void CancelFieldTargetMenu(InputAction.CallbackContext obj)
     {
-        CancelFightTargetMenu();
+        CancelFieldTargetMenu();
     }
-    private void CancelFightTargetMenu()
+    private void CancelFieldTargetMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1717,8 +1903,9 @@ public class BTLPlayerControl : MonoBehaviour
             playerCommand = null;
             choosingFightTarget = false;
 
+            //Legacy_SwitchControlContext(ControlContext.Fight);
             SwitchControlContext(ControlContext.Fight);
-            view.battleUI.SwitchPanel(BTLUI.Panel.Fight, true);
+            view.battleUI.SwitchPanel(BTLUI_Base.Panel.Fight);
             view.battleUI.SwitchSelectedMoveTo(
                 pokemon: commandPokemon,
                 selected: moveslots[moveIndex],
@@ -1812,7 +1999,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void NavigatePartyMenu(int scrollAmount, bool skipBackButton = false)
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1830,7 +2017,7 @@ public class BTLPlayerControl : MonoBehaviour
                 partyIndex++;
                 partyIndex %= partySlots.Count;
             }
-            view.battleUI.SwitchSelectedPartyTo(partySlots[partyIndex]);
+            view.battleUI.SwitchSelectedPartyMemberTo(partySlots[partyIndex]);
         }
     }
     
@@ -1840,7 +2027,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void SelectPartyMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1863,8 +2050,8 @@ public class BTLPlayerControl : MonoBehaviour
                 new List<BattleExtraCommand>
                 {
                     BattleExtraCommand.Summary,
-                    BattleExtraCommand.Moves,
                     BattleExtraCommand.Switch,
+                    BattleExtraCommand.Moves,
                     BattleExtraCommand.Cancel
                 }
                 ));
@@ -1901,7 +2088,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void CancelPartyMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1914,15 +2101,17 @@ public class BTLPlayerControl : MonoBehaviour
             {
                 if (selectedItem == null)
                 {
+                    //Legacy_SwitchControlContext(ControlContext.Command);
                     SwitchControlContext(ControlContext.Command);
-                    view.battleUI.SwitchPanel(BTLUI.Panel.Command, true);
+                    view.battleUI.SwitchPanel(BTLUI_Base.Panel.Command);
                     view.battleUI.SwitchSelectedCommandTo(commandTypes[commandIndex]);
                 }
                 else
                 {
                     selectedItem = null;
+                    //Legacy_SwitchControlContext(ControlContext.Bag);
                     SwitchControlContext(ControlContext.Bag);
-                    view.battleUI.SwitchPanel(BTLUI.Panel.Bag, true);
+                    view.battleUI.SwitchPanel(BTLUI_Base.Panel.BagItem);
                 }
             }
         }
@@ -1941,7 +2130,7 @@ public class BTLPlayerControl : MonoBehaviour
         }
         else
         {
-            if (waitCRActive)
+            if (AreControlsLocked())
             {
                 return;
             }
@@ -1952,7 +2141,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void NavigatePartyCommandMenu(int scrollAmount)
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -1974,7 +2163,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void SelectPartyCommandMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -2040,7 +2229,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void CancelPartyCommandMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -2049,9 +2238,10 @@ public class BTLPlayerControl : MonoBehaviour
         {
             choosingExtraCommand = false;
 
+            //Legacy_SwitchControlContext(ControlContext.Party);
             SwitchControlContext(ControlContext.Party);
-            view.battleUI.SwitchPanel(BTLUI.Panel.Party, true);
-            view.battleUI.SwitchSelectedPartyTo(partySlots[partyIndex]);
+            view.battleUI.SwitchPanel(BTLUI_Base.Panel.Party);
+            view.battleUI.SwitchSelectedPartyMemberTo(partySlots[partyIndex]);
         }
     }
 
@@ -2073,10 +2263,10 @@ public class BTLPlayerControl : MonoBehaviour
             bool accountForBack = itemPockets.Contains(ItemBattlePocket.None);
             int rows = accountForBack ? 3 : 2;
             int columns = 2;
-            ItemBattlePocket[,] cmdMap = GetBagPocketMap(rows, columns, accountForBack);
+            ItemBattlePocket[,] map = GetBagPocketMap(rows, columns, accountForBack);
 
             int newPos = itemPocketIndex;
-            int[] curPos = GetBagPocketXYPos(itemPockets[itemPocketIndex], cmdMap);
+            int[] curPos = GetBagPocketXYPos(itemPockets[itemPocketIndex], map);
             if (curPos[0] != -1)
             {
                 int newRow = (curPos[0] + scrollY) % rows;
@@ -2085,7 +2275,7 @@ public class BTLPlayerControl : MonoBehaviour
                 int newColumn = (curPos[1] + scrollX) % columns;
                 if (newColumn < 0) newColumn += columns;
 
-                ItemBattlePocket nextChoice = cmdMap[newRow, newColumn];
+                ItemBattlePocket nextChoice = map[newRow, newColumn];
                 newPos = itemPockets.IndexOf(nextChoice);
             }
             NavigateBagPocketMenu(newPos - itemPocketIndex);
@@ -2129,7 +2319,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void NavigateBagPocketMenu(int scrollAmount)
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -2151,7 +2341,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void SelectBagPocketMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -2178,7 +2368,7 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void CancelBagPocketMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
@@ -2188,8 +2378,9 @@ public class BTLPlayerControl : MonoBehaviour
             playerCommand = null;
             choosingBagPocket = false;
 
+            //Legacy_SwitchControlContext(ControlContext.Command);
             SwitchControlContext(ControlContext.Command);
-            view.battleUI.SwitchPanel(BTLUI.Panel.Command, true);
+            view.battleUI.SwitchPanel(BTLUI_Base.Panel.Command);
             view.battleUI.SwitchSelectedCommandTo(commandTypes[commandIndex]);
         }
     }
@@ -2203,20 +2394,127 @@ public class BTLPlayerControl : MonoBehaviour
         int scrollY = -Mathf.RoundToInt(obj.ReadValue<Vector2>().y);
         NavigateBagMenu(scrollX, scrollY);
     }
+    private void NavigateBagMenuNew(int scrollX, int scrollY)
+    {
+        if (scrollX != 0 || scrollY != 0)
+        {
+            int maxItemCount = view.battleUI.bagItemPanel.maxItemCount;
+            int itemCount = 0;
+            int curIndex = itemIndex;
+
+            List<Item> selectableItems = new List<Item>();
+            selectableItems.Add(null);
+            for (int i = itemOffset; i < curIndex + maxItemCount && i < itemSlots.Count; i++)
+            {
+                selectableItems.Add(itemSlots[i]);
+            }
+
+            bool accountForBack = selectableItems.Contains(null);
+            int rows = ((selectableItems.Count + (accountForBack ? -1 : 0)) / 2) + (accountForBack ? 1 : 0);
+            int columns = 2;
+            Item[,] map = GetBagItemMap(rows, columns, accountForBack, selectableItems);
+
+            int newPos = itemIndex;
+            int[] curPos = GetBagItemXYPos(itemSlots[curIndex], map);
+            if (curPos[0] != -1)
+            {
+                int newRow = (curPos[0] + scrollY) % rows;
+                if (newRow < 0) newRow += rows;
+
+                int newColumn = (curPos[1] + scrollX) % columns;
+                if (newColumn < 0) newColumn += columns;
+
+                Item nxtSlot = map[newRow, newColumn];
+                newPos = itemSlots.IndexOf(nxtSlot);
+            }
+            NavigateFightMenu(newPos - curIndex);
+        }
+    }
+    private Item[,] GetBagItemMap(int rows, int columns, bool accountForBack, List<Item> list)
+    {
+        Item[,] map = new Item[rows, columns];
+        int start = accountForBack ? 1 : 0;
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < columns; j++)
+            {
+                if (i == 0 && accountForBack)
+                {
+                    map[i, j] = null;
+                }
+                else
+                {
+                    if (start >= list.Count)
+                    {
+                        map[i, j] = null;
+                    }
+                    else
+                    {
+                        map[i, j] = list[start];
+                    }
+                    start++;
+                }
+            }
+        }
+        return map;
+    }
+    private int[] GetBagItemXYPos(Item moveslot, Item[,] map)
+    {
+        for (int i = 0; i < map.GetLength(0); i++)
+        {
+            for (int j = 0; j < map.GetLength(1); j++)
+            {
+                if (map[i, j] == moveslot)
+                {
+                    return new int[] { i, j };
+                }
+            }
+        }
+
+        return new int[] { -1, -1 };
+    }
+
+    private void NavigateBagMenu(int scrollAmount)
+    {
+        if (AreControlsLocked())
+        {
+            return;
+        }
+        if (scrollAmount != 0)
+        {
+            itemIndex += scrollAmount;
+            itemIndex %= itemSlots.Count;
+            if (itemIndex < 0)
+            {
+                itemIndex += itemSlots.Count;
+            }
+            view.battleUI.SwitchSelectedItemTo(itemSlots[itemOffset + itemIndex]);
+        }
+    }
+    private void NavigateBagMenuScroll(bool scrollRight)
+    {
+        if (AreControlsLocked())
+        {
+            return;
+        }
+
+    }
+
     private void NavigateBagMenu(int scrollX, int scrollY)
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
 
         // Scroll pages
+        int maxItemCount = view.battleUI.bagItemPanel.maxItemCount;
         if (scrollX != 0
-            && itemIndex != view.battleUI.maxItemCount)
+            && itemIndex != maxItemCount)
         {
             int preOffset = itemOffset;
-            itemOffset += view.battleUI.maxItemCount * scrollX;
-            if (itemOffset + Mathf.Min(itemIndex, view.battleUI.maxItemCount) >= itemSlots.Count)
+            itemOffset += maxItemCount * scrollX;
+            if (itemOffset + Mathf.Min(itemIndex, maxItemCount) >= itemSlots.Count)
             {
                 itemIndex = 0;
                 if (itemOffset >= itemSlots.Count)
@@ -2226,8 +2524,8 @@ public class BTLPlayerControl : MonoBehaviour
             }
             else if (itemOffset < 0)
             {
-                itemOffset = itemSlots.Count - (itemSlots.Count % view.battleUI.maxItemCount);
-                if (itemOffset + Mathf.Min(itemIndex, view.battleUI.maxItemCount) >= itemSlots.Count)
+                itemOffset = itemSlots.Count - (itemSlots.Count % maxItemCount);
+                if (itemOffset + Mathf.Min(itemIndex, maxItemCount) >= itemSlots.Count)
                 {
                     itemIndex = 0;
                 }
@@ -2236,7 +2534,7 @@ public class BTLPlayerControl : MonoBehaviour
             {
                 view.battleUI.SetItems(commandTrainer, itemPockets[itemPocketIndex], itemSlots, itemOffset);
 
-                if (itemIndex == view.battleUI.maxItemCount)
+                if (itemIndex == maxItemCount)
                 {
                     view.battleUI.SwitchSelectedItemTo(null);
                 }
@@ -2248,31 +2546,31 @@ public class BTLPlayerControl : MonoBehaviour
         }
         else if (scrollY != 0)
         {
-            if (itemIndex == view.battleUI.maxItemCount)
+            if (itemIndex == maxItemCount)
             {
-                itemIndex = (scrollY > 0) ? 0 : view.battleUI.maxItemCount - 1;
+                itemIndex = (scrollY > 0) ? 0 : maxItemCount - 1;
             }
             else
             {
                 itemIndex += scrollY;
             }
             if (itemIndex == -1
-                || itemIndex == view.battleUI.maxItemCount
+                || itemIndex == maxItemCount
                 || itemOffset + itemIndex == itemSlots.Count)
             {
-                itemIndex = view.battleUI.maxItemCount;
+                itemIndex = maxItemCount;
                 view.battleUI.SwitchSelectedItemTo(null);
             }
             else
             {
-                itemIndex %= view.battleUI.maxItemCount;
+                itemIndex %= maxItemCount;
                 if (itemIndex < 0)
                 {
-                    itemIndex += view.battleUI.maxItemCount;
+                    itemIndex += maxItemCount;
                 }
                 if (itemOffset + itemIndex >= itemSlots.Count)
                 {
-                    itemIndex = (itemSlots.Count % view.battleUI.maxItemCount) - 1;
+                    itemIndex = (itemSlots.Count % maxItemCount) - 1;
                 }
                 view.battleUI.SwitchSelectedItemTo(itemSlots[itemOffset + itemIndex]);
             }
@@ -2284,12 +2582,13 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void SelectBagMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
         Item choice;
-        if (itemIndex == view.battleUI.maxItemCount)
+        int maxItemCount = view.battleUI.bagItemPanel.maxItemCount;
+        if (itemIndex == maxItemCount)
         {
             choice = null;
         }
@@ -2320,15 +2619,16 @@ public class BTLPlayerControl : MonoBehaviour
     }
     private void CancelBagMenu()
     {
-        if (waitCRActive)
+        if (AreControlsLocked())
         {
             return;
         }
         playerCommand = null;
         choosingItem = false;
 
+        //Legacy_SwitchControlContext(ControlContext.BagPocket);
         SwitchControlContext(ControlContext.BagPocket);
-        view.battleUI.SwitchPanel(BTLUI.Panel.BagPocket, true);
+        view.battleUI.SwitchPanel(BTLUI_Base.Panel.Bag);
         view.battleUI.SwitchSelectedBagPocketTo(itemPockets[itemPocketIndex]);
     }
 
@@ -2746,7 +3046,7 @@ public class BTLPlayerControl : MonoBehaviour
             {
                 yield return StartCoroutine(view.battleUI.DrawTextInstantNoWait(
                     text: gameText,
-                    textBox: view.battleUI.partyCmdTxt));
+                    textBox: view.battleUI.partyPanel.promptText));
             }
         }
         // bag commands
@@ -2865,7 +3165,7 @@ public class BTLPlayerControl : MonoBehaviour
             {
                 yield return StartCoroutine(view.battleUI.DrawTextInstantNoWait(
                         text: gameText,
-                        textBox: view.battleUI.partyTxt));
+                        textBox: view.battleUI.partyPanel.promptText));
             }
         }
         // run commands

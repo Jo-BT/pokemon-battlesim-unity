@@ -79,7 +79,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "IIIIIIIIIIII <color=#8080FF>\u2642</color>"
+  m_Text: "13 Characters <color=#8080FF>\u2642</color>"
 --- !u!114 &6574168902484486224
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -203,7 +203,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6574168902845145104
 RectTransform:
   m_ObjectHideFlags: 0
@@ -907,6 +907,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nameTxt: {fileID: 6574168902484486225}
   lvlTxt: {fileID: 6574168903985919761}
+  statusTxt: {fileID: 6574168903877699121}
   hpTxt: {fileID: 6574168902845145107}
   hpObj: {fileID: 6574168902845145111}
   expObj: {fileID: 6574168903867822936}
@@ -914,7 +915,7 @@ MonoBehaviour:
   hpBar: {fileID: 6574168904386928157}
   hpHigh: {r: 0, g: 1, b: 0, a: 1}
   hpMed: {r: 1, g: 1, b: 0, a: 1}
-  hpLow: {r: 1, g: 0, b: 0, a: 0.9882353}
+  hpLow: {r: 1, g: 0, b: 0, a: 1}
   pokemonUniqueID: 
 --- !u!1 &6574168904314551384
 GameObject:
@@ -1058,7 +1059,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 44415cc8c527ee346b0471e36189425e, type: 3}
-  m_Type: 1
+  m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 0

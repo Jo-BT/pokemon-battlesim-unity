@@ -668,5 +668,14 @@ public class PokemonDatabase
         Debug.LogWarning("Could not find Pokemon with ID: " + ID);
         return database[""];
     }
+    public PokemonData GetPokemonIllusionData(Pokemon.BattleProperties.Illusion illusion)
+    {
+        if (database.ContainsKey(illusion.pokemonID))
+        {
+            return database[illusion.pokemonID];
+        }
+        Debug.LogWarning("Could not find Illusion appearance with Pokemon ID: " + illusion.pokemonID);
+        return database[""];
+    }
 
 }

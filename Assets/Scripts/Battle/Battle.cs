@@ -502,8 +502,8 @@ public class Battle
         return new List<ItemBattlePocket>
         {
             ItemBattlePocket.HPRestore,
-            ItemBattlePocket.StatusRestore,
             ItemBattlePocket.Pokeballs,
+            ItemBattlePocket.StatusRestore,
             ItemBattlePocket.BattleItems
         };
     }
@@ -4893,6 +4893,7 @@ public class Battle
         string moveID,
         Pokemon targetPokemon,
         BattleCommand command = null,
+        bool overrideZMove = false, bool overrideMaxMove = false,
         int hit = 1,
         EffectDatabase.MoveEff.Magnitude.MagnitudeLevel magnitudeLevel = null,
         EffectDatabase.AbilityEff.ParentalBond.BondedHit parentalBondHit = null
@@ -4900,8 +4901,10 @@ public class Battle
     {
         return GetPokemonMoveData(
             userPokemon: userPokemon, targetPokemon: new List<Pokemon> { targetPokemon },
-            moveID: moveID, hit: hit, magnitudeLevel: magnitudeLevel,
-            command: command
+            moveID: moveID, hit: hit, 
+            magnitudeLevel: magnitudeLevel, parentalBondHit: parentalBondHit,
+            command: command,
+            overrideZMove: overrideZMove, overrideMaxMove: overrideMaxMove
             );
     }
     public MoveData GetPokemonMoveData(
@@ -4909,6 +4912,7 @@ public class Battle
         string moveID,
         List<Pokemon> targetPokemon = null,
         BattleCommand command = null,
+        bool overrideZMove = false, bool overrideMaxMove = false,
         int hit = 1,
         EffectDatabase.MoveEff.Magnitude.MagnitudeLevel magnitudeLevel = null,
         EffectDatabase.AbilityEff.ParentalBond.BondedHit parentalBondHit = null
@@ -4917,8 +4921,13 @@ public class Battle
         MoveData baseMoveData = MoveDatabase.instance.GetMoveData(moveID);
 
         // Z-Move Overwrite
+        bool willConvertToZMove = overrideZMove;
+        if (command != null && !willConvertToZMove)
+        {
+            willConvertToZMove = command.isZMove;
+        }
         bool convertedToZMove = false;
-        if (command.isZMove)
+        if (willConvertToZMove)
         {
             MoveData zMoveData = GetPokemonZMoveData(userPokemon, moveID);
             if (zMoveData != null)
@@ -5392,7 +5401,12 @@ public class Battle
 
         // Max Move Overwrite
 
-        if (command.isDynamaxing || userPokemon.dynamaxState != Pokemon.DynamaxState.None)
+        bool willConvertToMaxMove = overrideMaxMove || userPokemon.dynamaxState != Pokemon.DynamaxState.None;
+        if (command != null && !willConvertToMaxMove)
+        {
+            willConvertToMaxMove = command.isDynamaxing;
+        }
+        if (willConvertToMaxMove)
         {
             MoveData maxMovePriorData = pokemonMoveData.Clone();
             maxMovePriorData.category = category;

@@ -23,4 +23,13 @@ public class BTLUI_ButtonFieldTarget : BTLUI_Button
 
     [HideInInspector] public Pokemon pokemon = null;
     [HideInInspector] public BattlePosition position = null;
+
+    public void RefreshSelf(bool active = true)
+    {
+        nameTxt.gameObject.SetActive(active);
+        lvlTxt.gameObject.SetActive(active);
+        statusTxt.gameObject.SetActive(active);
+        hpObj.SetActive(active);
+        icon.gameObject.SetActive(active);
+    }
 }
